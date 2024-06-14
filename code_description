@@ -1,0 +1,87 @@
+1. Create a directory named diabetes
+!mkdir diabetes
+
+2. Import necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+3. Load the diabetes dataset
+data = pd.read_csv("/content/diabetes/diabetes.csv")
+
+4. Separate features (x) and target variable (y)
+x = data.drop(['Outcome'], axis=1)
+y = data['Outcome']
+
+5. Scale the feature data using MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+x = scaler.fit_transform(x)
+
+6. Split the data into training and testing sets (70-30 split)
+from sklearn.model_selection import train_test_split
+xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.3, random_state=1)
+
+7. Initialize and train a KNN classifier with n_neighbors=1
+from sklearn.neighbors import KNeighborsClassifier
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(xtrain, ytrain)
+ypred = knn.predict(xtest)
+
+8. Evaluate the initial KNN model
+from sklearn.metrics import confusion_matrix, classification_report
+print(confusion_matrix(ytest, ypred))
+print(classification_report(ytest, ypred))
+
+9. Plot error rate for K values from 1 to 39
+error_rate = []
+for i in range(1, 40):
+    knn = KNeighborsClassifier(n_neighbors=i)
+    knn.fit(xtrain, ytrain)
+    pred_i = knn.predict(xtest)
+    error_rate.append(np.mean(pred_i != ytest))
+
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, 40), error_rate, color='blue', linestyle='--', marker='o', markerfacecolor='red', markersize=10)
+plt.title('K versus Error rate')
+plt.xlabel('K')
+plt.ylabel('Error rate')
+plt.show()
+
+10. Specify the optimal K value (11 as indicated by the plot)
+k_value = 11
+knn = KNeighborsClassifier(n_neighbors=k_value)
+knn.fit(xtrain, ytrain)
+predictions = knn.predict(xtest)
+
+11. Evaluate the optimized KNN model
+print(confusion_matrix(ytest, ypred))
+print(classification_report(ytest, ypred))
+
+12. Define a function to calculate Euclidean distance
+def euclidean_distance(a, b):
+    return np.sqrt(np.sum((a - b) ** 2))
+
+13. Example prediction with distance calculation
+example_index = 0
+example = xtest[example_index]
+true_label = ytest.iloc[example_index]
+distances = np.array([euclidean_distance(example, x_train) for x_train in xtrain])
+nearest_neighbors_indices = distances.argsort()[:k_value]
+nearest_neighbors_labels = ytrain.iloc[nearest_neighbors_indices]
+predicted_label = nearest_neighbors_labels.mode()[0]
+
+print(f'Test example: {example}')
+print(f'True label: {"has diabetes" if true_label == 1 else "does not have diabetes"}')
+print(f'Predicted label: {"has diabetes" if predicted_label == 1 else "does not have diabetes"}')
+print(f'Nearest neighbors labels: {nearest_neighbors_labels.values}')
+print(f'Distances to nearest neighbors: {distances[nearest_neighbors_indices]}')
+
+14. Check if the prediction is correct
+if true_label == predicted_label:
+    print("The prediction is correct.")
+else:
+    print("The prediction is incorrect.")
+
+
